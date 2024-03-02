@@ -1,0 +1,16 @@
+#main {
+    display: flex;
+}
+#main > div {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+#left {
+    max-width: 200px;
+    word-break: break-all;
+}
+#left > .token {
+    font-size: 12px;
+}

@@ -1,0 +1,23 @@
+html, body {
+background-color: white;
+margin: 0px;
+-webkit-font-smoothing: antialiased;
+overscroll-behavior-y: none;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  html, body {
+      background-color: #0F0F0F;
+      color: #efefef;
+  }
+}
+
+
+::-moz-selection { /* Code for Firefox */
+  background: #a1a1a1;
+}
+
+::selection {
+  background: #a1a1a1;
+}
