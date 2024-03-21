@@ -1,5 +1,6 @@
 #main {
     display: flex;
+    font-family: "lig";
 }
 #main > div {
     padding: 20px;
@@ -8,9 +9,55 @@
     gap: 5px;
 }
 #left {
+    width: 200px;
     max-width: 200px;
     word-break: break-all;
 }
 #left > .token {
     font-size: 12px;
+}
+
+#main input, 
+#main button, 
+#main select 
+{
+    font-family: "lig";
+    height: 30px;
+    border-radius: 5px;
+    background: none;
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid var(--CGray);
+}
+#main input:hover, 
+#main button:hover, 
+#main select:hover
+{
+    border: 1px solid var(--CB4);
+}
+
+#main > * > button,
+#main > * > label > select  {
+    font-family: "reg";
+}
+
+.check {
+    border: 1px solid var(--CGray);
+}
+
+@media (prefers-color-scheme: dark) {
+
+    #main input, 
+    #main button, 
+    #main select 
+    {
+        border: 1px solid #333;
+    }
+    #main input:hover, 
+    #main button:hover, 
+    #main select:hover
+    {
+        border: 1px solid #666;
+    }
+
 }

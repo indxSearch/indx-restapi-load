@@ -323,6 +323,7 @@ const ReadFilePage: React.FC = () => {
         </label>
 
 
+        <div>
         heap <input
             style={{ width: '30px' }}
             type="text"
@@ -330,6 +331,8 @@ const ReadFilePage: React.FC = () => {
             value={heap}
             onChange={handleHeapChange}
           />
+        </div>
+        <div>
         configuration <input
             style={{ width: '30px' }}
             type="text"
@@ -337,6 +340,7 @@ const ReadFilePage: React.FC = () => {
             value={configuration}
             onChange={handleConfigurationChange}
           />
+        </div>
 
         file
         {/* <div> */}
@@ -359,14 +363,15 @@ const ReadFilePage: React.FC = () => {
 
         segmentation
         <label style={{ fontSize: '12px' }}>
-          <input 
+          <input
+            className={styles.check}
             type="checkbox" 
             checked={splitLongLines}
             onChange={handleSplitLines} 
           />
           Split Long Lines?
           {splitLongLines && (
-            <span>
+            <>
                 <input 
                     style={{ width: '40px'}}
                     type="number" 
@@ -374,7 +379,7 @@ const ReadFilePage: React.FC = () => {
                     onChange={handleSegmentLength} 
                 />
                 chars
-            </span>
+            </>
           )}
 
 

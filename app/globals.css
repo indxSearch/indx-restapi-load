@@ -1,8 +1,32 @@
+:root {
+  --CGray: #CFCFCF;
+  --CSignal: #FF4238;
+
+  --CB1: #EAEAFF;
+  --CB2: #AAAAFF;
+  --CB3: #5B02EA;
+  --CB4: #1A1A21;
+  --CB5: #121215;
+  --CB6: #101012;
+}
+
 html, body {
+font-family: "lig", sans-serif;
 background-color: white;
-margin: 0px;
+margin: 0 auto;
 -webkit-font-smoothing: antialiased;
 overscroll-behavior-y: none;
+min-width: 320px;
+}
+html{scroll-behavior: smooth;}
+
+h1:focus {
+  outline: none;
+}
+
+h3 {
+  font-family: "lig";
+  font-weight: lighter;
 }
 
 /* Dark mode */
@@ -11,8 +35,26 @@ overscroll-behavior-y: none;
       background-color: #0F0F0F;
       color: #efefef;
   }
+  input, button, select, label {
+    color: white;
+  }
 }
 
+@font-face {
+  font-family: lig;
+  src: url('/fonts/lig.woff2');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: reg;
+  src: url('/fonts/reg.woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
 
 ::-moz-selection { /* Code for Firefox */
   background: #a1a1a1;
