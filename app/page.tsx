@@ -43,7 +43,7 @@ const ReadFilePage: React.FC = () => {
   const [configuration, setConfiguration] = useState<string>("100"); // Config 100 is the most common
   const [selectedFile, setSelectedFile] = useState<string>('movie_names.txt'); // Predefined files
   const [uploadedFile, setUploadedFile] = useState<File | null>(null); // Upload custom .txt file
-
+  const [customFileName, setCustomFileName] = useState<string>('');
 
   // Login to fetch API token
   const Login = async (): Promise<void> => {
@@ -274,12 +274,14 @@ const ReadFilePage: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
     setSelectedFile(event.target.value);
     setUploadedFile(null);
+    setCustomFileName('');
   };
   const handleCustomFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       setUploadedFile(file);
       setSelectedFile('custom');
+      setCustomFileName(file.name);
     }
   };
 
@@ -343,7 +345,7 @@ const ReadFilePage: React.FC = () => {
         </div>
 
         file
-        {/* <div> */}
+        <div>
           <label>
             <select style={{ width: '100%' }} value={selectedFile} onChange={handleFileChange}>
               <option value="movie_names.txt">movie_names.txt</option>
@@ -354,11 +356,13 @@ const ReadFilePage: React.FC = () => {
           </label>
 
           {selectedFile === 'custom' && (
-            <label>
-              <input type="file" onChange={handleCustomFileChange} style={{ width: '100%' }} />
-            </label>
+            <div className={styles.selectFile}>
+              <input id="file-input" type="file" onChange={handleCustomFileChange} />
+              <label htmlFor="file-input">Choose a file</label>
+              {uploadedFile && <div>Selected file: {customFileName}</div>}
+            </div>
           )}
-        {/* </div> */}
+        </div>
 
 
         segmentation

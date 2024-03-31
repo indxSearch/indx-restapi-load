@@ -41,6 +41,34 @@
     font-family: "reg";
 }
 
+.selectFile {
+    border: none !important;
+}
+
+.selectFile input[type="file"] {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.selectFile label {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1px solid var(--CGray);
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.selectFile label:hover {
+    background-color: #0056b3;
+}
+
+
 .check {
     border: 1px solid var(--CGray);
 }
