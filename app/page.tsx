@@ -16,24 +16,23 @@ interface Document {
   documentTextToBeIndexed: string;
   segmentNumber: number;
 }
+
 interface StateInfo {
   systemState: number;
   [key: string]: any; // Add other properties as needed
 }
 
-const ReadFilePage: React.FC = () => {
+const LoadIndx: React.FC = () => {
   const [deleting, setDeleting] = useState<boolean>(false);
   const [creating, setCreating] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [indexing, setIndexing] = useState<boolean>(false);
+  const [indexProgressPercent, setIndexProgressPercent] = useState<number>(0);
   const [saving, setSaving] = useState<boolean>(false);
   const [stateInfo, setState] = useState<StateInfo>({ systemState: 0 });
 
   const [token, setToken] = useState<string>("");
   const [url, setUrl] = useState<string>('https://api.indx.co/api/'); // Starting url
-
-  const [splitLongLines, setSplitLongLines] = useState<boolean>(false); // split text into segments if needed. Maximum line length in configuration 100 is 300 characters
-  const [segmentLength, setSegmentLength] = useState<number>(80);
 
   // Credentials. Can be set in UI, or pre-populated here.
   const [usr, setUsr] = useState<string>(''); // Indx Auth username (e-mail)
@@ -65,25 +64,32 @@ const ReadFilePage: React.FC = () => {
   };
 
   // Check state of system
-  const GetState = async (): Promise<void> => {
+  const GetState = async (): Promise<StateInfo> => {
     try {
-      const response = await fetch(url + "Search/" + heap, {
+      const response = await fetch(`${url}Search/${heap}`, {
         method: 'GET',
         headers: {
-          'Accept': 'text/plain',
+          'Accept': 'application/json',
           'Authorization': token,
         },
       });
-
+  
       const data = await response.json();
-      setState(data);
-      console.log(data);
+      if (data && typeof data === 'object') {
+        setState(data);
+        return data;
+      } else {
+        throw new Error('Invalid response structure');
+      }
     } catch (error) {
       console.error("Error getting state", error);
+      return { systemState: 0, indexProgressPercent: 0 };
     }
   };
+  
 
-  // Delete an entire heap
+  // 1 Delete an entire heap
+  // Make sure the heap you want to index is cleared and ready
   const DeleteHeap = async (): Promise<void> => {
     setDeleting(true);
     try {
@@ -102,7 +108,8 @@ const ReadFilePage: React.FC = () => {
     }
   };
 
-  // Create a heap
+  // 2 Create a heap
+  // Before indexing, we need to create an instance
   const CreateHeap = async (): Promise<void> => {
     setCreating(true);
     try {
@@ -121,8 +128,9 @@ const ReadFilePage: React.FC = () => {
     }
   };
 
-  // Load data from predefined or uploaded file
-  const LoadData = async (shouldSplit: boolean): Promise<void> => {
+  // 3 Load data from predefined or uploaded file
+  // This function takes a .txt file and splits it by line number
+  const LoadData = async (): Promise<void> => {
     setLoading(true);
     try {
       let text = '';
@@ -137,61 +145,22 @@ const ReadFilePage: React.FC = () => {
           reader.readAsText(uploadedFile);
         });
       } else {
-        // Fallback to fetching a predefined file
         const response = await fetch(`/${selectedFile}`);
         text = await response.text();
       }
   
       // Split the content by lines
       const lines = text.split('\n');
-      const targetSegmentLength = segmentLength; // Ideal segment length
-      const minLastSegmentLength = targetSegmentLength / 2; // Minimum length for the last segment
-  
-      // Utility function for segmentation logic
-      const splitAndNormalizeLines = (line: string, targetLength: number, minLength: number): string[] => {
-        let segments: string[] = [];
-        if (!shouldSplit) {
-          segments.push(line); // Use the line as-is if splitting is disabled
-          return segments;
-        }
-  
-        let totalLength = line.length;
-        let estimatedSegments = Math.ceil(totalLength / targetLength);
-        if (totalLength - (estimatedSegments - 1) * targetLength < minLength) {
-          estimatedSegments++;
-        }
-  
-        let averageLength = Math.ceil(totalLength / estimatedSegments);
-        let start = 0;
-  
-        while (start < totalLength) {
-          let end = start + averageLength > totalLength ? totalLength : start + averageLength;
-          let cutPoint = line.lastIndexOf(' ', end);
-  
-          if (cutPoint <= start || cutPoint === -1) cutPoint = Math.min(end, totalLength);
-  
-          segments.push(line.substring(start, cutPoint).trim());
-          start = cutPoint + 1;
-        }
-  
-        if (segments.length > 1 && segments[segments.length - 1].length < minLength) {
-          let lastSegment = segments.pop();
-          segments[segments.length - 1] += ' ' + lastSegment;
-        }
-  
-        return segments;
-      };
-  
-      // Map each line to the Document class, considering the shouldSplit flag
-      const data: Document[] = lines.flatMap((line, index): Document[] => {
-        const segments = splitAndNormalizeLines(line, targetSegmentLength, minLastSegmentLength);
-        return segments.map((segment, segmentIndex): Document => ({
+
+      // Create the document
+      const data: Document[] = lines.map((line, index): Document => {
+        return {
           deleted: false,
           documentClientInformation: "",
           documentKey: index,
-          documentTextToBeIndexed: segment,
-          segmentNumber: segmentIndex,
-        }));
+          documentTextToBeIndexed: line,
+          segmentNumber: 0
+        };
       });
   
       // Send the data to the REST API
@@ -212,26 +181,39 @@ const ReadFilePage: React.FC = () => {
     }
   };
   
-  // Start indexing
+  // 4 Start indexing
+  // Run indexing on the loaded data
   const DoIndex = async (): Promise<void> => {
     setIndexing(true);
+    setIndexProgressPercent(0); // Reset progress on start
+  
     try {
       await fetch(url + "Search/" + "DoIndex/" + heap, {
         method: 'GET',
         headers: {
           'Accept': 'text/plain',
           'Authorization': token,
-      }
-    });
-    } catch(error) {
+        }
+      });
+  
+      const intervalId = setInterval(async () => {
+        const state = await GetState(); // Get the latest state info
+        const progress = state.indexProgressPercent || 0;
+        setIndexProgressPercent(progress);
+  
+        if (progress >= 100) {
+          clearInterval(intervalId);
+          setIndexing(false); // Correctly update the indexing state here
+        }
+      }, 20);
+    } catch (error) {
       console.error("Error indexing", error);
-    } finally {
       setIndexing(false);
-      GetState();
     }
-  }
+  };  
 
-  // Save heap for persistence
+  // 5 Save heap for persistence
+  // Save the index for persistence on the file system
   const SaveHeap = async (): Promise<void> => {
     setSaving(true);
     try {
@@ -249,7 +231,9 @@ const ReadFilePage: React.FC = () => {
     }
   };
 
-  // Input handlers
+  //
+  // UI Input handlers
+  //
 
   const handleUsrChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setUsr(event.target.value);
@@ -284,24 +268,19 @@ const ReadFilePage: React.FC = () => {
       setCustomFileName(file.name);
     }
   };
-
-  const handleSplitLines = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    setSplitLongLines(event.target.checked);
-  };
-
-  const handleSegmentLength = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const value = parseInt(event.target.value, 10);
-    if (!isNaN(value)) {
-      setSegmentLength(value);
-    }
-  };
   
 
   return (
     <main id={styles.main}>
       <div id={styles.left}>
 
-        credentials
+        <label> 
+          <select value={url} onChange={handleUrlChange}>
+            <option value='https://api.indx.co/api/'>api.indx.co</option>
+            <option value='http://localhost:38171/api/'>Localhost (:38171)</option>
+          </select>
+        </label>
+
         <input
           type="text"
           placeholder="Username"
@@ -317,13 +296,7 @@ const ReadFilePage: React.FC = () => {
 
         <button onClick={Login}>Login</button>
 
-        <label> 
-          <select value={url} onChange={handleUrlChange}>
-            <option value='https://api.indx.co/api/'>api.indx.co</option>
-            <option value='http://localhost:38171/api/'>Local (:38171)</option>
-          </select>
-        </label>
-
+        <br />
 
         <div>
         heap <input
@@ -364,29 +337,6 @@ const ReadFilePage: React.FC = () => {
           )}
         </div>
 
-
-        {/* segmentation
-        <label style={{ fontSize: '12px' }}>
-          <input
-            className={styles.check}
-            type="checkbox" 
-            checked={splitLongLines}
-            onChange={handleSplitLines} 
-          />
-          Split Long Lines?
-          {splitLongLines && (
-            <>
-                <input 
-                    style={{ width: '40px'}}
-                    type="number" 
-                    value={segmentLength}
-                    onChange={handleSegmentLength} 
-                />
-                chars
-            </>
-          )}
-        </label> */}
-
         <br />
 
         <button onClick={DeleteHeap} disabled={deleting}>
@@ -395,7 +345,7 @@ const ReadFilePage: React.FC = () => {
         <button onClick={CreateHeap} disabled={creating}>
           {creating ? "Creating..." : "Create Heap"}</button>
 
-        <button onClick={() => LoadData(splitLongLines)} disabled={loading}>
+        <button onClick={LoadData} disabled={loading}>
           {loading ? "Processing..." : "Read and Send Data"}</button>
 
         <button onClick={DoIndex} disabled={indexing}>
@@ -411,7 +361,7 @@ const ReadFilePage: React.FC = () => {
       <div>
         
         <button onClick={GetState}>Get state</button>
-        <p>Response body:</p>
+
         <p>system state: {
           (() => {
             const systemStates: Record<number, string> = {
@@ -439,6 +389,17 @@ const ReadFilePage: React.FC = () => {
           })()
         }</p>
 
+        {indexing && (
+          <div className={styles.progressBarWrapper}>{indexProgressPercent}%
+            <div className={styles.progressBarContainer}>
+              <div
+                className={styles.progressBar}
+                style={{ width: `${indexProgressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <ul>
           {Object.entries(stateInfo).map(([key, value]) => (
             <li key={key}>
@@ -452,4 +413,4 @@ const ReadFilePage: React.FC = () => {
   );
 };
 
-export default ReadFilePage;
+export default LoadIndx;

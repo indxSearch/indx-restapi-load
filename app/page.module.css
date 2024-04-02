@@ -68,10 +68,28 @@
     border: 1px solid var(--CB4);
 }
 
-
-.check {
-    border: 1px solid var(--CGray);
+.progressBarWrapper {
+    display: flex;
+    font-size: 12px;
+    align-items: center;
+    gap: 10px;
 }
+.progressBarContainer {
+    width: 100%;
+    background-color: #eee;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+  
+  .progressBar {
+    background-color: var(--CB4);
+    height: 8px;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 24px; /* Center the text vertically */
+    color: white;
+  }
+  
 
 @media (prefers-color-scheme: dark) {
 
