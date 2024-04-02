@@ -344,28 +344,28 @@ const ReadFilePage: React.FC = () => {
           />
         </div>
 
-        file
+        
         <div>
           <label>
             <select style={{ width: '100%' }} value={selectedFile} onChange={handleFileChange}>
               <option value="movie_names.txt">movie_names.txt</option>
               <option value="movie_metadata.txt">movie_metadata.txt</option>
               <option value="airports.txt">airports.txt</option>
-              <option value="custom">Upload custom file...</option>
+              <option value="custom">Upload custom .txt file...</option>
             </select>
           </label>
 
           {selectedFile === 'custom' && (
             <div className={styles.selectFile}>
               <input id="file-input" type="file" onChange={handleCustomFileChange} />
-              <label htmlFor="file-input">Choose a file</label>
+              <label htmlFor="file-input">Choose a .txt file</label>
               {uploadedFile && <div>Selected file: {customFileName}</div>}
             </div>
           )}
         </div>
 
 
-        segmentation
+        {/* segmentation
         <label style={{ fontSize: '12px' }}>
           <input
             className={styles.check}
@@ -385,10 +385,9 @@ const ReadFilePage: React.FC = () => {
                 chars
             </>
           )}
+        </label> */}
 
-
-
-        </label>
+        <br />
 
         <button onClick={DeleteHeap} disabled={deleting}>
           {deleting ? "Deleting..." : "Delete Heap"}</button>

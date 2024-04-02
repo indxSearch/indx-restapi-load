@@ -55,17 +55,17 @@
 }
 
 .selectFile label {
+    margin-top: 10px;
     display: inline-block;
     padding: 10px 20px;
     border: 1px solid var(--CGray);
-    color: white;
     border-radius: 5px;
     cursor: pointer;
     text-align: center;
 }
 
 .selectFile label:hover {
-    background-color: #0056b3;
+    border: 1px solid var(--CB4);
 }
 
 
@@ -85,6 +85,14 @@
     #main button:hover, 
     #main select:hover
     {
+        border: 1px solid #666;
+    }
+    .selectFile label {
+        border: 1px solid #333;
+        color: white;
+    }
+    
+    .selectFile label:hover {
         border: 1px solid #666;
     }
 
