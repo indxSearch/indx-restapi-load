@@ -18,15 +18,15 @@
 }
 
 #main input, 
-#main button, 
-#main select 
+#main button,
+#main select
 {
     font-family: "lig";
     height: 30px;
     border-radius: 5px;
     background: none;
     padding-left: 5px;
-    padding-right: 5px;
+    padding-right: 10px;
     border: 1px solid var(--CGray);
 }
 #main input:hover, 
@@ -79,16 +79,16 @@
     background-color: #eee;
     border-radius: 4px;
     margin: 10px 0;
-  }
-  
-  .progressBar {
+}
+
+.progressBar {
     background-color: var(--CB4);
     height: 8px;
     border-radius: 4px;
     text-align: center;
     line-height: 24px; /* Center the text vertically */
     color: white;
-  }
+}
   
 
 @media (prefers-color-scheme: dark) {
@@ -112,6 +112,16 @@
     
     .selectFile label:hover {
         border: 1px solid #666;
+    }
+
+    .progressBarContainer {
+        background-color: var(--CB4);
+        border-radius: 4px;
+        margin: 10px 0;
+    }
+    
+    .progressBar {
+        background-color: var(--CB2);
     }
 
 }

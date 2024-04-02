@@ -203,9 +203,9 @@ const LoadIndx: React.FC = () => {
   
         if (progress >= 100) {
           clearInterval(intervalId);
-          setIndexing(false); // Correctly update the indexing state here
+          setIndexing(false);
         }
-      }, 20);
+      }, 100);
     } catch (error) {
       console.error("Error indexing", error);
       setIndexing(false);
