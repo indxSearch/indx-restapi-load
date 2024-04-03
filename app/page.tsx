@@ -31,7 +31,8 @@ const LoadIndx: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [stateInfo, setState] = useState<StateInfo>({ systemState: 0 });
 
-  const [token, setToken] = useState<string>("");
+  const [apiToken, setApiToken] = useState<string>("");
+  const [loginStatus, setLoginStatus] = useState<string>("Not logged in");
   const [url, setUrl] = useState<string>('https://api.indx.co/api/'); // Starting url
 
   // Credentials. Can be set in UI, or pre-populated here.
@@ -44,22 +45,35 @@ const LoadIndx: React.FC = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null); // Upload custom .txt file
   const [customFileName, setCustomFileName] = useState<string>('');
 
-  // Login to fetch API token
+
   const Login = async (): Promise<void> => {
     try {
       const response = await fetch(url + "Login?userEmail=" + usr + "&userPassWord=" + pw, {
         method: 'POST',
         headers: {
           'Accept': 'text/plain',
-          'Authorization': token,
+          'Authorization': apiToken,
         },
       });
 
-      const data: AccessToken = await response.json();
-      console.log("Bearer " + data.token);
-      setToken("Bearer " + data.token);
+      if (response.status === 401) {
+        // Unauthorized
+        console.error("Login failed: Unauthorized");
+        setLoginStatus("Unauthorized. Check credentials");
+        setApiToken(""); // Clear token on failure
+      } else if (response.status === 400) {
+        setApiToken("");
+        setLoginStatus("Bad request");
+      }
+      else {
+        const data: AccessToken = await response.json();
+        console.log("Bearer " + data.token);
+        setApiToken("Bearer " + data.token);
+        setLoginStatus("Authorized");
+      }
     } catch (error) {
-      console.error("Error getting state", error);
+      console.error("Error during login", error);
+      setApiToken(""); // Clear token on error
     }
   };
 
@@ -70,7 +84,7 @@ const LoadIndx: React.FC = () => {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': token,
+          'Authorization': apiToken,
         },
       });
   
@@ -97,7 +111,7 @@ const LoadIndx: React.FC = () => {
         method: 'DELETE',
         headers: {
           'Accept': '*/*',
-          'Authorization': token,
+          'Authorization': apiToken,
       }
     });
     } catch(error) {
@@ -117,7 +131,7 @@ const LoadIndx: React.FC = () => {
         method: 'PUT',
         headers: {
           'Accept': '*/*',
-          'Authorization': token,
+          'Authorization': apiToken,
       }
     });
     } catch(error) {
@@ -168,7 +182,7 @@ const LoadIndx: React.FC = () => {
         method: 'PUT',
         headers: {
           'Accept': '*/*',
-          'Authorization': token,
+          'Authorization': apiToken,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
@@ -192,7 +206,7 @@ const LoadIndx: React.FC = () => {
         method: 'GET',
         headers: {
           'Accept': 'text/plain',
-          'Authorization': token,
+          'Authorization': apiToken,
         }
       });
   
@@ -221,7 +235,7 @@ const LoadIndx: React.FC = () => {
         method: 'PUT',
         headers: {
           'Accept': '*/*',
-          'Authorization': token,
+          'Authorization': apiToken,
       }
     });
     } catch(error) {
@@ -241,6 +255,12 @@ const LoadIndx: React.FC = () => {
 
   const handlePwChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setPw(event.target.value);
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === 'Enter') {
+      Login();
+    }
   };
   
   const handleUrlChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
@@ -292,9 +312,12 @@ const LoadIndx: React.FC = () => {
           placeholder="Password"
           value={pw}
           onChange={handlePwChange}
+          onKeyDown={handleKeyPress}
         />
 
         <button onClick={Login}>Login</button>
+
+        <p className={styles.loginStatus}>{loginStatus}</p>
 
         <br />
 
@@ -354,7 +377,7 @@ const LoadIndx: React.FC = () => {
         <button onClick={SaveHeap} disabled={saving}>
           {saving ? "Saving heap..." : "SaveHeap"}</button>
 
-        <p className={styles.token}>{token}</p>
+        <p className={styles.token}>{apiToken}</p>
 
       </div>
 
@@ -377,7 +400,7 @@ const LoadIndx: React.FC = () => {
               return isEmpty;
             });
 
-            if (stateInfo.systemState === 0 && !token) {
+            if (stateInfo.systemState === 0 && !apiToken) {
               return 'Not connected';
             }
             // Check if we essentially have no meaningful information beyond systemState

@@ -41,6 +41,11 @@
     font-family: "reg";
 }
 
+.loginStatus {
+    font-size: 12px;
+    opacity: 0.5;
+}
+
 .selectFile {
     border: none !important;
 }
