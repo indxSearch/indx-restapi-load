@@ -32,7 +32,7 @@ h3 {
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   html, body {
-      background-color: #0F0F0F;
+      background-color: var(--CB6);
       color: #efefef;
   }
   input, button, select, label {

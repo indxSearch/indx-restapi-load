@@ -3,7 +3,7 @@
     font-family: "lig";
 }
 #main > div {
-    padding: 20px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -12,9 +12,20 @@
     width: 200px;
     max-width: 200px;
     word-break: break-all;
+    font-size: 14px;
+}
+#left > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 #left > .token {
     font-size: 12px;
+    opacity: 0.5;
+}
+
+#mid {
+    width: 500px;
 }
 
 #main input, 
@@ -44,6 +55,15 @@
 .loginStatus {
     font-size: 12px;
     opacity: 0.5;
+}
+.dropdown {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+.dropdown > label {
+    width: 100%;
 }
 
 .selectFile {
@@ -94,6 +114,54 @@
     line-height: 24px; /* Center the text vertically */
     color: white;
 }
+.statusClass {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Creates two columns of equal width */
+    border: 1px solid #eee; /* Border around the whole grid */
+    border-radius: 8px;
+}
+
+.statusClass > div {
+    padding: 10px; /* Padding inside each cell */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.statusClass > div > div {
+    font-size: 14px;
+}
+.statusValue {
+    font-size: 16px !important;
+    font-family: "reg";
+}
+.statusHeading {
+    opacity: 0.5;
+}
+
+/* First cell - bottom and right borders */
+.statusClass > div:nth-child(1) {
+    border-bottom: 1px solid #eee;
+    border-right: 1px solid #eee;
+}
+
+/* Second cell - bottom border only */
+.statusClass > div:nth-child(2) {
+    border-bottom: 1px solid #eee;
+}
+
+/* Third cell - right border only */
+.statusClass > div:nth-child(3) {
+    border-right: 1px solid #eee;
+}
+
+/* Fourth cell - no border */
+.statusClass > div:nth-child(4) {
+    border: none;
+}
+
+
+
+
   
 
 @media (prefers-color-scheme: dark) {
@@ -127,6 +195,21 @@
     
     .progressBar {
         background-color: var(--CB2);
+    }
+
+    .statusClass {
+        border: 1px solid #222; /* Border around the whole grid */
+        background-color: var(--CB5);
+    }
+    .statusClass > div:nth-child(1) {
+        border-bottom: 1px solid #222;
+        border-right: 1px solid #222;
+    }
+    .statusClass > div:nth-child(2) {
+        border-bottom: 1px solid #222;
+    }
+    .statusClass > div:nth-child(3) {
+        border-right: 1px solid #222;
     }
 
 }

@@ -288,18 +288,26 @@ const LoadIndx: React.FC = () => {
       setCustomFileName(file.name);
     }
   };
+
+
+  const [showStatusClass, setShowStatusClass] = useState<boolean>(false);
+  const toggleStatusClass = () => {
+    setShowStatusClass(!showStatusClass);
+  }
   
 
   return (
     <main id={styles.main}>
       <div id={styles.left}>
 
-        <label> 
-          <select value={url} onChange={handleUrlChange}>
-            <option value='https://api.indx.co/api/'>api.indx.co</option>
-            <option value='http://localhost:38171/api/'>Localhost (:38171)</option>
-          </select>
-        </label>
+        <div className={styles.dropdown}>
+          <label> 
+            <select style={{ width: '100%' }} value={url} onChange={handleUrlChange}>
+              <option value='https://api.indx.co/api/'>api.indx.co</option>
+              <option value='http://localhost:38171/api/'>Localhost (:38171)</option>
+            </select>
+          </label>
+        </div>
 
         <input
           type="text"
@@ -322,7 +330,7 @@ const LoadIndx: React.FC = () => {
         <br />
 
         <div>
-        heap <input
+        DatasetID (Heap) <input
             style={{ width: '30px' }}
             type="text"
             placeholder="HeapID"
@@ -331,7 +339,7 @@ const LoadIndx: React.FC = () => {
           />
         </div>
         <div>
-        configuration <input
+        Configuration <input
             style={{ width: '30px' }}
             type="text"
             placeholder="Configuration"
@@ -340,8 +348,10 @@ const LoadIndx: React.FC = () => {
           />
         </div>
 
+        <br/>
         
-        <div>
+        Dataset
+        <div className={styles.dropdown}>
           <label>
             <select style={{ width: '100%' }} value={selectedFile} onChange={handleFileChange}>
               <option value="movie_names.txt">movie_names.txt</option>
@@ -381,11 +391,11 @@ const LoadIndx: React.FC = () => {
 
       </div>
 
-      <div>
+      <div id={styles.mid}>
         
         <button onClick={GetState}>Get state</button>
 
-        <p>system state: {
+        <p>System state: {
           (() => {
             const systemStates: Record<number, string> = {
               0: 'Created, not loaded',
@@ -412,6 +422,9 @@ const LoadIndx: React.FC = () => {
           })()
         }</p>
 
+
+        {/* Progess bar when indexing */}
+
         {indexing && (
           <div className={styles.progressBarWrapper}>{indexProgressPercent}%
             <div className={styles.progressBarContainer}>
@@ -423,6 +436,29 @@ const LoadIndx: React.FC = () => {
           </div>
         )}
 
+        {/* Status class */}
+        <div className={styles.statusClass}>
+          <div>
+            <div className={styles.statusHeading}>Documents:</div>
+            <div className={styles.statusValue}>{stateInfo.documentCount}</div>
+          </div>
+          <div>
+            <div className={styles.statusHeading}>Indexing time:</div>
+            <div className={styles.statusValue}>{stateInfo.secondsToIndex} seconds</div>
+          </div>
+          <div>
+            <div className={styles.statusHeading}>Search counter:</div>
+            <div className={styles.statusValue}>{stateInfo.searchCounter}</div>
+          </div>
+          <div>
+            <div className={styles.statusHeading}>Version:</div>
+            <div className={styles.statusValue}>{stateInfo.version}</div>
+          </div>
+        </div>
+
+        <button style={{ width: '200px', marginTop: '20px' }} onClick={toggleStatusClass}>Show StatusClass</button>
+
+        {showStatusClass && (
         <ul>
           {Object.entries(stateInfo).map(([key, value]) => (
             <li key={key}>
@@ -430,8 +466,10 @@ const LoadIndx: React.FC = () => {
             </li>
           ))}
         </ul>
+        )}
 
       </div>  
+
     </main>
   );
 };
