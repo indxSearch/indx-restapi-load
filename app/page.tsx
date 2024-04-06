@@ -33,6 +33,7 @@ const LoadIndx: React.FC = () => {
 
   const [apiToken, setApiToken] = useState<string>("");
   const [loginStatus, setLoginStatus] = useState<string>("Not logged in");
+  const [isLoggedin, setIsLoggedin] = useState<boolean>(false);
   const [url, setUrl] = useState<string>('https://api.indx.co/api/'); // Starting url
 
   // Credentials. Can be set in UI, or pre-populated here.
@@ -69,7 +70,8 @@ const LoadIndx: React.FC = () => {
         const data: AccessToken = await response.json();
         console.log("Bearer " + data.token);
         setApiToken("Bearer " + data.token);
-        setLoginStatus("Authorized");
+        setLoginStatus("Authorized as " + usr);
+        setIsLoggedin(true);
       }
     } catch (error) {
       console.error("Error during login", error);
@@ -257,11 +259,21 @@ const LoadIndx: React.FC = () => {
     setPw(event.target.value);
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+  const handleLoginKeyPress = (event: React.KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === 'Enter') {
       Login();
     }
   };
+
+  const LogOut = async (): Promise<void> => {
+    setUsr("");
+    setPw("");
+    setApiToken("");
+    setLoginStatus("Not logged in");
+    setIsLoggedin(false);
+  }
+
+
   
   const handleUrlChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
     setUrl(event.target.value);
@@ -309,23 +321,29 @@ const LoadIndx: React.FC = () => {
           </label>
         </div>
 
-        <input
-          type="text"
-          placeholder="Username"
-          value={usr}
-          onChange={handleUsrChange}
-        />
-        <input
-          type="Password"
-          placeholder="Password"
-          value={pw}
-          onChange={handlePwChange}
-          onKeyDown={handleKeyPress}
-        />
-
-        <button onClick={Login}>Login</button>
-
         <p className={styles.loginStatus}>{loginStatus}</p>
+
+        {!isLoggedin ? (
+          <>
+          <input
+            type="text"
+            placeholder="Username"
+            value={usr}
+            onChange={handleUsrChange}
+          />
+          <input
+            type="Password"
+            placeholder="Password"
+            value={pw}
+            onChange={handlePwChange}
+            onKeyDown={handleLoginKeyPress}
+          />
+
+          <button onClick={Login}>Log in</button>
+          </>
+        ) : (
+          <button onClick={LogOut}>Log out</button>
+        )}
 
         <br />
 
@@ -363,7 +381,7 @@ const LoadIndx: React.FC = () => {
 
           {selectedFile === 'custom' && (
             <div className={styles.selectFile}>
-              <input id="file-input" type="file" onChange={handleCustomFileChange} />
+              <input id="file-input" type="file" accept='.txt' onChange={handleCustomFileChange} />
               <label htmlFor="file-input">Choose a .txt file</label>
               {uploadedFile && <div>Selected file: {customFileName}</div>}
             </div>
@@ -386,8 +404,6 @@ const LoadIndx: React.FC = () => {
 
         <button onClick={SaveHeap} disabled={saving}>
           {saving ? "Saving heap..." : "SaveHeap"}</button>
-
-        <p className={styles.token}>{apiToken}</p>
 
       </div>
 
