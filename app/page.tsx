@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import styles from './page.module.css';
 
 
@@ -306,6 +306,15 @@ const LoadIndx: React.FC = () => {
   const toggleStatusClass = () => {
     setShowStatusClass(!showStatusClass);
   }
+
+ // Initial URL setup based on query parameters
+ useEffect(() => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialUrl = queryParams.get('url');
+  if (initialUrl) {
+    setUrl(initialUrl); // Set URL from query parameters
+  }
+  }, []);
   
 
   return (
