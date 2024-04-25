@@ -19,13 +19,14 @@ interface Document {
 
 interface StateInfo {
   systemState: number;
-  [key: string]: any; // Add other properties as needed
+  [key: string]: any;
 }
 
 const LoadIndx: React.FC = () => {
   const [deleting, setDeleting] = useState<boolean>(false);
   const [creating, setCreating] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingProgress, setLoadingProgress] = useState('0/0');
   const [indexing, setIndexing] = useState<boolean>(false);
   const [indexProgressPercent, setIndexProgressPercent] = useState<number>(0);
   const [saving, setSaving] = useState<boolean>(false);
@@ -103,7 +104,6 @@ const LoadIndx: React.FC = () => {
     }
   };
   
-
   // 1 Delete an entire heap
   // Make sure the heap you want to index is cleared and ready
   const DeleteHeap = async (): Promise<void> => {
@@ -146,54 +146,69 @@ const LoadIndx: React.FC = () => {
 
   // 3 Load data from predefined or uploaded file
   // This function takes a .txt file and splits it by line number
+  // Incremental loading with chunks of 100.000 documents each
   const LoadData = async (): Promise<void> => {
     setLoading(true);
-    try {
-      let text = '';
-  
-      // Check if a user-selected file is present
-      if (uploadedFile) {
-        // Use FileReader to read the file content
-        text = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(uploadedFile);
-        });
-      } else {
-        const response = await fetch(`/${selectedFile}`);
-        text = await response.text();
-      }
-  
-      // Split the content by lines
-      const lines = text.split('\n');
+    let totalLines = 0;
 
-      // Create the document
-      const data: Document[] = lines.map((line, index): Document => {
-        return {
-          deleted: false,
-          documentClientInformation: "",
-          documentKey: index,
-          documentTextToBeIndexed: line,
-          segmentNumber: 0
-        };
-      });
-  
-      // Send the data to the REST API
-      await fetch(`${url}Search/array/${heap}`, {
-        method: 'PUT',
-        headers: {
-          'Accept': '*/*',
-          'Authorization': apiToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+    try {
+        let text = '';
+
+        if (uploadedFile) {
+            text = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsText(uploadedFile);
+            });
+        } else {
+            const response = await fetch(`/${selectedFile}`);
+            text = await response.text();
+        }
+
+        const lines = text.split('\n');
+        totalLines = lines.length;
+        setLoadingProgress("0 / " + totalLines);
+
+        const chunkSize = 100000;
+        let currentIndex = 0;
+
+        while (currentIndex < totalLines) {
+            const endLine = Math.min(currentIndex + chunkSize, totalLines);
+            const chunk = lines.slice(currentIndex, endLine).map((line, index) => ({
+                deleted: false,
+                documentClientInformation: "",
+                documentKey: currentIndex + index,
+                documentTextToBeIndexed: line,
+                segmentNumber: 0
+            }));
+
+            await fetch(`${url}Search/array/${heap}`, {
+                method: 'PUT',
+                headers: {
+                    'Accept': '*/*',
+                    'Authorization': apiToken,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(chunk),
+            });
+
+            for (let i = currentIndex; i < endLine; i += 1000) {
+                const currentProgress = Math.min(i + 1000, totalLines);
+                await new Promise(resolve => setTimeout(resolve, 0)); // Breaks up the synchronous block
+                setLoadingProgress(currentProgress + " / " + totalLines);
+            }
+
+            currentIndex = endLine;
+        }
+
+        setLoadingProgress(totalLines + " / " + totalLines);
     } catch (error) {
-      console.error("Error loading data", error);
+        console.error("Error loading data", error);
+        setLoadingProgress("0 / " + totalLines);
     } finally {
-      setLoading(false);
-      GetState();
+        setLoading(false);
+        GetState();
     }
   };
   
@@ -247,6 +262,7 @@ const LoadIndx: React.FC = () => {
     }
   };
 
+
   //
   // UI Input handlers
   //
@@ -272,8 +288,6 @@ const LoadIndx: React.FC = () => {
     setLoginStatus("Not logged in");
     setIsLoggedin(false);
   }
-
-
   
   const handleUrlChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
     setUrl(event.target.value);
@@ -448,8 +462,13 @@ const LoadIndx: React.FC = () => {
         }</p>
 
 
-        {/* Progess bar when indexing */}
+        {/* Progess when loading or indexing */}
 
+        {loading && (
+          <div className={styles.progressBarWrapper}> 
+            Loading and sending documents ({loadingProgress})
+          </div>
+        )}
         {indexing && (
           <div className={styles.progressBarWrapper}>{indexProgressPercent}%
             <div className={styles.progressBarContainer}>
