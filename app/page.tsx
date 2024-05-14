@@ -9,17 +9,21 @@ interface AccessToken {
   [key: string]: any; // Extend this to fit the actual API response
 }
 
-interface Document {
-  deleted: boolean;
-  documentClientInformation: string;
-  documentKey: number;
-  documentTextToBeIndexed: string;
-  segmentNumber: number;
-}
+// interface Document {
+//   deleted: boolean;
+//   documentClientInformation: string;
+//   documentKey: number;
+//   documentTextToBeIndexed: string;
+//   segmentNumber: number;
+// }
 
 interface StateInfo {
   systemState: number;
   [key: string]: any;
+}
+
+interface DatasetInfo {
+  [dataset: string]: any;
 }
 
 const LoadIndx: React.FC = () => {
@@ -31,6 +35,7 @@ const LoadIndx: React.FC = () => {
   const [indexProgressPercent, setIndexProgressPercent] = useState<number>(0);
   const [saving, setSaving] = useState<boolean>(false);
   const [stateInfo, setState] = useState<StateInfo>({ systemState: 0 });
+  const [datasetInfo, setDatasetInfo] = useState<DatasetInfo>({});
 
   const [apiToken, setApiToken] = useState<string>("");
   const [loginStatus, setLoginStatus] = useState<string>("Not logged in");
@@ -41,9 +46,9 @@ const LoadIndx: React.FC = () => {
   const [usr, setUsr] = useState<string>(''); // Indx Auth username (e-mail)
   const [pw, setPw] = useState<string>(''); // Password
 
-  const [heap, setHeapId] = useState<string>("0"); // Default to heap 0
+  const [dataset, setDataset] = useState<string>("test"); // Default to "test"
   const [configuration, setConfiguration] = useState<string>("100"); // Config 100 is the most common
-  const [selectedFile, setSelectedFile] = useState<string>('movie_names.txt'); // Predefined files
+  const [selectedFile, setSelectedFile] = useState<string>('tmdb_top10k_movies.txt'); // Predefined files
   const [uploadedFile, setUploadedFile] = useState<File | null>(null); // Upload custom .txt file
   const [customFileName, setCustomFileName] = useState<string>('');
 
@@ -80,10 +85,35 @@ const LoadIndx: React.FC = () => {
     }
   };
 
-  // Check state of system
-  const GetState = async (): Promise<StateInfo> => {
+  // Retrieve existing datasets
+  const GetDatasets = async (): Promise<void> => {
     try {
-      const response = await fetch(`${url}Search/${heap}`, {
+      const response = await fetch(`${url}Search/datasets`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/plain',
+          'Authorization': apiToken,
+        },
+      });
+
+      const data = await response.json();
+      if (data) {
+        setDatasetInfo(data);
+      } else {
+        setDatasetInfo([]);
+      }
+
+    } catch(error) {
+      console.error("Error getting dataset info", error);
+      setDatasetInfo([]);
+    }
+  }
+
+  // Check state of dataset
+  const GetState = async (): Promise<StateInfo> => {
+    GetDatasets();
+    try {
+      const response = await fetch(`${url}Search/${dataset}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -104,12 +134,12 @@ const LoadIndx: React.FC = () => {
     }
   };
   
-  // 1 Delete an entire heap
-  // Make sure the heap you want to index is cleared and ready
-  const DeleteHeap = async (): Promise<void> => {
+  // 1 Delete an entire dataset
+  // Make sure the dataset you want to index is cleared and ready
+  const DeleteDataset = async (): Promise<void> => {
     setDeleting(true);
     try {
-      await fetch(url + "Search/" + heap, {
+      await fetch(url + "Search/" + dataset, {
         method: 'DELETE',
         headers: {
           'Accept': '*/*',
@@ -120,16 +150,18 @@ const LoadIndx: React.FC = () => {
       console.error("Error deleting", error);
     } finally {
       setDeleting(false);
+      setIndexing(false);
       setState({systemState: 0})
+      GetDatasets();
     }
   };
 
-  // 2 Create a heap
+  // 2 Create a dataset
   // Before indexing, we need to create an instance
-  const CreateHeap = async (): Promise<void> => {
+  const CreateDataset = async (): Promise<void> => {
     setCreating(true);
     try {
-      await fetch(url + "Search/" + heap + "/" + configuration, {
+      await fetch(url + "Search/" + dataset + "/" + configuration, {
         method: 'PUT',
         headers: {
           'Accept': '*/*',
@@ -166,7 +198,7 @@ const LoadIndx: React.FC = () => {
             text = await response.text();
         }
 
-        const lines = text.split('\n');
+        const lines = text.split('\n').filter(line => line.trim() !== '');
         totalLines = lines.length;
         setLoadingProgress("0 / " + totalLines);
 
@@ -183,7 +215,7 @@ const LoadIndx: React.FC = () => {
                 segmentNumber: 0
             }));
 
-            await fetch(`${url}Search/array/${heap}`, {
+            await fetch(`${url}Search/array/${dataset}`, {
                 method: 'PUT',
                 headers: {
                     'Accept': '*/*',
@@ -214,12 +246,12 @@ const LoadIndx: React.FC = () => {
   
   // 4 Start indexing
   // Run indexing on the loaded data
-  const DoIndex = async (): Promise<void> => {
+  const IndexDataset = async (): Promise<void> => {
     setIndexing(true);
     setIndexProgressPercent(0); // Reset progress on start
   
     try {
-      await fetch(url + "Search/" + "DoIndex/" + heap, {
+      await fetch(url + "Search/" + "IndexDataSet/" + dataset, {
         method: 'GET',
         headers: {
           'Accept': 'text/plain',
@@ -243,12 +275,12 @@ const LoadIndx: React.FC = () => {
     }
   };  
 
-  // 5 Save heap for persistence
+  // 5 Save dataset for persistence
   // Save the index for persistence on the file system
-  const SaveHeap = async (): Promise<void> => {
+  const SaveDataset = async (): Promise<void> => {
     setSaving(true);
     try {
-      await fetch(url + "Search/" + heap, {
+      await fetch(url + "Search/" + dataset, {
         method: 'PUT',
         headers: {
           'Accept': '*/*',
@@ -293,8 +325,8 @@ const LoadIndx: React.FC = () => {
     setUrl(event.target.value);
   };
 
-  const handleHeapChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    setHeapId(event.target.value);
+  const handleDatasetChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setDataset(event.target.value);
   };
 
   const handleConfigurationChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -371,12 +403,12 @@ const LoadIndx: React.FC = () => {
         <br />
 
         <div>
-        DatasetID (Heap) <input
-            style={{ width: '30px' }}
+        Dataset<input
+            style={{ width: '100px' }}
             type="text"
-            placeholder="HeapID"
-            value={heap}
-            onChange={handleHeapChange}
+            placeholder="name"
+            value={dataset}
+            onChange={handleDatasetChange}
           />
         </div>
         <div>
@@ -391,13 +423,12 @@ const LoadIndx: React.FC = () => {
 
         <br/>
         
-        Dataset
+        File
         <div className={styles.dropdown}>
           <label>
             <select style={{ width: '100%' }} value={selectedFile} onChange={handleFileChange}>
-              <option value="movie_names.txt">movie_names.txt</option>
-              <option value="movie_metadata.txt">movie_metadata.txt</option>
-              <option value="airports.txt">airports.txt</option>
+              <option value="tmdb_top10k_movies.txt">TMDB Top Movies</option>
+              <option value="airports.txt">44K Airports</option>
               <option value="custom">Upload custom .txt file...</option>
             </select>
           </label>
@@ -413,20 +444,20 @@ const LoadIndx: React.FC = () => {
 
         <br />
 
-        <button onClick={DeleteHeap} disabled={deleting}>
-          {deleting ? "Deleting..." : "Delete Heap"}</button>
+        <button onClick={DeleteDataset} disabled={deleting}>
+          {deleting ? "Deleting..." : "Delete dataset"}</button>
 
-        <button onClick={CreateHeap} disabled={creating}>
-          {creating ? "Creating..." : "Create Heap"}</button>
+        <button onClick={CreateDataset} disabled={creating}>
+          {creating ? "Creating..." : "Create dataset"}</button>
 
         <button onClick={LoadData} disabled={loading}>
           {loading ? "Processing..." : "Read and Send Data"}</button>
 
-        <button onClick={DoIndex} disabled={indexing}>
+        <button onClick={IndexDataset} disabled={indexing}>
           {indexing ? "Indexing..." : "Do Index"}</button>
 
-        <button onClick={SaveHeap} disabled={saving}>
-          {saving ? "Saving heap..." : "SaveHeap"}</button>
+        <button onClick={SaveDataset} disabled={saving}>
+          {saving ? "Saving dataset..." : "SaveDataset"}</button>
 
       </div>
 
@@ -509,8 +540,18 @@ const LoadIndx: React.FC = () => {
               <strong>{key}:</strong> {value !== null && value !== undefined ? value.toString() : 'N/A'}
             </li>
           ))}
+          <li>
+            <strong>Datasets:</strong>
+            <ul>
+              {Object.entries(datasetInfo).map(([dataset, value]) => (
+                <li key={dataset}>
+                  <strong>{value !== null && value !== undefined ? value.toString() : 'N/A'}</strong>
+                </li>
+              ))}
+            </ul>
+          </li>
         </ul>
-        )}
+      )}
 
       </div>  
 
