@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'rest API local indexer',
+  title: 'Indx RestAPI Load',
   description: 'This is a demo application to add data to indx search engine',
 };
 
