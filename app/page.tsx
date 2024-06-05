@@ -40,7 +40,7 @@ const LoadIndx: React.FC = () => {
   const [apiToken, setApiToken] = useState<string>("");
   const [loginStatus, setLoginStatus] = useState<string>("Not logged in");
   const [isLoggedin, setIsLoggedin] = useState<boolean>(false);
-  const [url, setUrl] = useState<string>('https://restapi.indx.co/v33/api/'); // Starting url
+  const [url, setUrl] = useState<string>('https://v33.indx.co/api/'); // Starting url
 
   // Credentials. Can be set in UI, or pre-populated here.
   const [usr, setUsr] = useState<string>(''); // Indx Auth username (e-mail)
@@ -370,7 +370,7 @@ const LoadIndx: React.FC = () => {
         <div className={styles.dropdown}>
           <label> 
             <select style={{ width: '100%' }} value={url} onChange={handleUrlChange}>
-              <option value='https://restapi.indx.co/v33/api/'>restapi.indx.co/v33</option>
+              <option value='https://v33.indx.co/api/'>v33.indx.co</option>
               <option value='http://localhost:38171/api/'>Localhost (:38171)</option>
             </select>
           </label>
